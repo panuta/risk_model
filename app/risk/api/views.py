@@ -57,13 +57,13 @@ class RiskModelDetailView(JsonDetailView):
     pk_url_kwarg = 'model_uuid'
     pk_field = 'uuid'
 
+    def validate_on_create(self, request, data, errors):
+        # TODO : Validate if model_uuid is existed
+        return data, errors
+
     def perform_update(self, request, validated_data, *args, **kwargs):
         model_uuid = kwargs.get(self.pk_url_kwarg)
-
-        try:
-            risk_model = RiskModel.objects.get(uuid=model_uuid)
-        except RiskModel.DoesNotExist:
-            raise Http404('Risk model does not found')
+        risk_model = RiskModel.objects.get(uuid=model_uuid)
 
         risk_model.name = validated_data.get('name')
         risk_model.save()
@@ -104,8 +104,8 @@ class RiskModelObjectListView(JsonListView):
         risk_model = RiskModel.objects.get(uuid=model_uuid)
 
         risk_object = RiskModelObject.objects.create(risk_model=risk_model)
-        for field_name, field_value in validated_data.items():
-            field = RiskModelField.objects.get(slug=field_name)
+        for field_slug, field_value in validated_data.items():
+            field = RiskModelField.objects.get(slug=field_slug)
 
             object_attrs = {
                 'risk_object': risk_object,
@@ -125,7 +125,29 @@ class RiskModelObjectDetailView(JsonDetailView):
     pk_field = 'uuid'
 
     def perform_update(self, request, validated_data, *args, **kwargs):
-        pass
+        object_uuid = kwargs.get(self.pk_url_kwarg)
+        risk_object = RiskModelObject.objects.get(uuid=object_uuid)
+
+        for field_slug, field_value in validated_data.items():
+            field = RiskModelField.objects.get(slug=field_slug)
+
+            try:
+                object_value = RiskModelObjectValue.objects.get(risk_object=risk_object, field=field)
+            except RiskModelObjectValue.DoesNotExist:
+                pass
+            else:
+                object_value.set_value(field_value)
+                object_value.save()
+
+        return risk_object
+
 
     def perform_delete(self, request, validated_data, *args, **kwargs):
-        pass
+        object_uuid = kwargs.get(self.pk_url_kwarg)
+
+        try:
+            risk_object = RiskModelObject.objects.get(uuid=object_uuid)
+        except RiskModelObject.DoesNotExist:
+            raise Http404('Risk model does not found')
+        else:
+            risk_object.delete()
