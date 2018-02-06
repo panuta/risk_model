@@ -1,6 +1,4 @@
 from django.http import Http404
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 
 from app.api.views import JsonListView, JsonDetailView
 from app.risk.models import RiskModel, RiskModelField
