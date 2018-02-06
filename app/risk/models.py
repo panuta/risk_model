@@ -35,7 +35,7 @@ class RiskModel(SerializableMixin, models.Model):
 class RiskModelField(SerializableMixin, models.Model):
     risk_model = models.ForeignKey(RiskModel, related_name='fields', on_delete=models.CASCADE)
     field_id = models.PositiveIntegerField()
-    slug = AutoSlugField(populate_from=['name'], editable=True, unique=True, db_index=True)
+    slug = AutoSlugField(populate_from=['name'], editable=True, db_index=True)
     name = models.CharField(max_length=128)
     type = models.CharField(max_length=64)
     is_required = models.BooleanField(default=False)
