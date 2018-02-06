@@ -14,12 +14,22 @@ from app.api.models import SerializableMixin
 class RiskModel(SerializableMixin, models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=64)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created', )
 
     def __str__(self):
         return self.name
 
     def to_dict(self):
-        pass
+        fields = [field.to_dict() for field in self.fields.all()]
+        return {
+            'uuid': self.uuid,
+            'name': self.name,
+            'fields': fields,
+            'created': self.created,
+        }
 
 
 class RiskModelField(SerializableMixin, models.Model):
@@ -37,7 +47,13 @@ class RiskModelField(SerializableMixin, models.Model):
         return '{field_name} of {model_name}'.format(field_name=self.name, model_name=self.risk_model)
 
     def to_dict(self):
-        pass
+        return {
+            'field_id': self.field_id,
+            'slug': self.slug,
+            'name': self.name,
+            'type': self.type,
+            'is_required': self.is_required,
+        }
 
     def save(self, **kwargs):
         if not self.field_id:
@@ -48,6 +64,10 @@ class RiskModelField(SerializableMixin, models.Model):
 class RiskModelObject(SerializableMixin, models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid.uuid4, editable=False)
     risk_model = models.ForeignKey(RiskModel, related_name='risk_objects', on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created', )
 
     def __str__(self):
         return '{model_name} object #{uuid}'.format(model_name=self.risk_model, uuid=self.uuid)
