@@ -1,8 +1,9 @@
 import uuid
 
 from django.db import models
-
 from django_extensions.db.fields import AutoSlugField
+
+from dateutil.parser import parse
 from sequences import get_next_value
 
 from app.api.models import SerializableMixin
@@ -73,10 +74,17 @@ class RiskModelObject(SerializableMixin, models.Model):
         return '{model_name} object #{uuid}'.format(model_name=self.risk_model, uuid=self.uuid)
 
     def to_dict(self):
-        pass
+        dict = {
+            'uuid': self.uuid,
+            'created': self.created,
+        }
+        for object_value in self.risk_values.all().select_related('field'):
+            dict[object_value.field.slug] = object_value.get_value()
+
+        return dict
 
 
-class RiskModelObjectValue(SerializableMixin, models.Model):
+class RiskModelObjectValue(models.Model):
     risk_object = models.ForeignKey(RiskModelObject, related_name='risk_values', on_delete=models.CASCADE)
     field = models.ForeignKey(RiskModelField, on_delete=models.CASCADE)
     field_type = models.CharField(max_length=64, editable=False)  # Same as `type` in `field.type`
@@ -89,17 +97,28 @@ class RiskModelObjectValue(SerializableMixin, models.Model):
     def __str__(self):
         return '{value} ({field})'.format(value=self.get_value(), field=self.field)
 
-    def to_dict(self):
-        pass
-
     def get_value(self):
         if self.field_type == 'text':
             return self.value_text
 
+        # TODO : add more type, convert to native data type
+
+        return None
+
+    @classmethod
+    def to_value(cls, field_type, naive_value):
+        if field_type == 'text':
+            return str(naive_value)
+        elif field_type == 'number':
+            return int(naive_value)
+        elif field_type == 'datetime':
+            return parse(naive_value)
         return None
 
     def set_value(self, value):
         if self.field_type == 'text':
             self.value_text = value
+
+        # TODO : add more type
 
         return None

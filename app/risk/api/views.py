@@ -1,7 +1,7 @@
 from django.http import Http404
 
 from app.api.views import JsonListView, JsonDetailView
-from app.risk.models import RiskModel, RiskModelField
+from app.risk.models import RiskModel, RiskModelField, RiskModelObject, RiskModelObjectValue
 
 
 class RiskModelListView(JsonListView):
@@ -40,7 +40,7 @@ class RiskModelListView(JsonListView):
                         has_error = True
                         field_errors['type'] = 'Type must not be empty'
 
-                    if field.get('type') not in ('text', 'number', 'datetime'):
+                    if field.get('type') not in ('text', 'number', 'datetime'):  # TODO : keep this list somewhere else
                         has_error = True
                         field_errors['type'] = 'Type is invalid'
 
@@ -93,3 +93,39 @@ class RiskModelDetailView(JsonDetailView):
             raise Http404('Risk model does not found')
         else:
             risk_model.delete()
+
+
+class RiskModelObjectListView(JsonListView):
+    model = RiskModelObject
+    paginate_url_name = 'risk_api:object-list'
+
+    def perform_create(self, request, validated_data, *args, **kwargs):
+        model_uuid = kwargs.get('model_uuid')
+        risk_model = RiskModel.objects.get(uuid=model_uuid)
+
+        risk_object = RiskModelObject.objects.create(risk_model=risk_model)
+        for field_name, field_value in validated_data.items():
+            field = RiskModelField.objects.get(slug=field_name)
+
+            object_attrs = {
+                'risk_object': risk_object,
+                'field': field,
+                'field_type': field.type,
+                'value_{}'.format(field.type): RiskModelObjectValue.to_value(field.type, field_value)
+            }
+
+            RiskModelObjectValue.objects.create(**object_attrs)
+
+        return risk_object
+
+
+class RiskModelObjectDetailView(JsonDetailView):
+    model = RiskModelObject
+    pk_url_kwarg = 'object_uuid'
+    pk_field = 'uuid'
+
+    def perform_update(self, request, validated_data, *args, **kwargs):
+        pass
+
+    def perform_delete(self, request, validated_data, *args, **kwargs):
+        pass
