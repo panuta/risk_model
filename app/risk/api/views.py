@@ -1,5 +1,3 @@
-import json
-
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -20,3 +18,29 @@ class RiskModelRESTView(JsonListView):
             RiskModelField.objects.create(risk_model=risk_model, **field)
 
         return risk_model
+
+    def validate(self, data, errors):
+        if not data.get('name', None):
+            errors['name'] = 'Name must not be empty'
+
+        if data.get('fields'):
+            if not isinstance(data.get('fields'), list):
+                errors['fields'] = 'Fields must be a list'
+            else:
+                fields_errors = []
+                for field in data.get('fields'):
+                    field_errors = {}
+                    if not field.get('name', None):
+                        field_errors['name'] = 'Name must not be empty'
+
+                    if not field.get('type', None):
+                        field_errors['type'] = 'Type must not be empty'
+
+                    if field.get('type') not in ('text', 'number', 'datetime'):
+                        field_errors['type'] = 'Type is invalid'
+
+                    fields_errors.append(field_errors)
+
+                errors['fields'] = fields_errors
+
+        return data, errors

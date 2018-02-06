@@ -60,13 +60,20 @@ class JsonListView(JsonResponseMixin, BaseListView):
         kwargs['results'] = queryset
         return kwargs
 
+    def validate(self, data, errors):
+        return data, errors
+
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
 
-        # TODO : Validate data
-        validated_data = data
+        validated_data, errors = self.validate(data, {})
+        if errors:
+            return self.render_to_response(errors, status=400)
 
-        obj = self.perform_create(request, validated_data, *args, **kwargs)
+        try:
+            obj = self.perform_create(request, data, *args, **kwargs)
+        except Exception as e:
+            return self.render_to_response({'error': str(e)}, status=500)
 
         if obj:
             if isinstance(obj, SerializableMixin):
