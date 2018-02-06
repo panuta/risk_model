@@ -1,13 +1,12 @@
+from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
-from app.api.views import JsonListView
+from app.api.views import JsonListView, JsonDetailView
 from app.risk.models import RiskModel, RiskModelField
 
 
-# Remove CSRF definitely not best-practices but let's make it simple just for this challenge
-@method_decorator(csrf_exempt, name='dispatch')
-class RiskModelRESTView(JsonListView):
+class RiskModelListView(JsonListView):
     model = RiskModel
     paginate_url_name = 'risk_api:model-list'
 
@@ -19,7 +18,7 @@ class RiskModelRESTView(JsonListView):
 
         return risk_model
 
-    def validate(self, data, errors):
+    def validate_on_create(self, request, data, errors):
         if not data.get('name', None):
             errors['name'] = 'Name must not be empty'
 
@@ -27,20 +26,72 @@ class RiskModelRESTView(JsonListView):
             if not isinstance(data.get('fields'), list):
                 errors['fields'] = 'Fields must be a list'
             else:
+                """
+                Note: Trying to maintain order of submitted fields. So when client receive error messages,
+                they will be able to match which field has error. It's good for user experience.
+                """
+                has_error = False
                 fields_errors = []
                 for field in data.get('fields'):
                     field_errors = {}
                     if not field.get('name', None):
+                        has_error = True
                         field_errors['name'] = 'Name must not be empty'
 
                     if not field.get('type', None):
+                        has_error = True
                         field_errors['type'] = 'Type must not be empty'
 
                     if field.get('type') not in ('text', 'number', 'datetime'):
+                        has_error = True
                         field_errors['type'] = 'Type is invalid'
 
                     fields_errors.append(field_errors)
 
-                errors['fields'] = fields_errors
+                if has_error:
+                    errors['fields'] = fields_errors
 
         return data, errors
+
+
+class RiskModelDetailView(JsonDetailView):
+    model = RiskModel
+    pk_url_kwarg = 'model_uuid'
+    pk_field = 'uuid'
+
+    def perform_update(self, request, validated_data, *args, **kwargs):
+        model_uuid = kwargs.get(self.pk_url_kwarg)
+
+        try:
+            risk_model = RiskModel.objects.get(uuid=model_uuid)
+        except RiskModel.DoesNotExist:
+            raise Http404('Risk model does not found')
+
+        risk_model.name = validated_data.get('name')
+        risk_model.save()
+
+        # Updating model fields
+        existing_fields = set(risk_model.fields.all())
+        updated_fields = set()
+
+        for field in validated_data.get('fields'):
+            field_id = field.get('field_id', None)
+            risk_model_field, _ = RiskModelField.objects.update_or_create(
+                risk_model=risk_model, field_id=field_id, defaults=field)
+
+            updated_fields.add(risk_model_field)
+
+        deleting_fields = existing_fields - updated_fields
+        RiskModelField.objects.filter(id__in=[f.id for f in deleting_fields]).delete()
+
+        return risk_model
+
+    def perform_delete(self, request, validated_data, *args, **kwargs):
+        model_uuid = kwargs.get(self.pk_url_kwarg)
+
+        try:
+            risk_model = RiskModel.objects.get(uuid=model_uuid)
+        except RiskModel.DoesNotExist:
+            raise Http404('Risk model does not found')
+        else:
+            risk_model.delete()
