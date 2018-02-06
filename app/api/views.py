@@ -34,7 +34,7 @@ class JsonListView(JsonResponseMixin, BaseListView):
         queryset = object_list if object_list is not None else self.object_list
         kwargs['count'] = queryset.count()
 
-        page_size = self.get_paginate_by(queryset)
+        page_size = self.kwargs.get('limit') or self.request.GET.get('limit') or self.get_paginate_by(queryset)
         if page_size:
             paginator, page, queryset, is_paginated = self.paginate_queryset(queryset, page_size)
             try:
