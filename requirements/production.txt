@@ -1,0 +1,15 @@
+# Production dependencies
+-r _base.txt
+
+# WSGI Handler
+# ------------------------------------------------
+gevent==1.2.2
+gunicorn==19.7.1
+
+# Email backends
+# ------------------------------------------------
+django-anymail==1.2
+
+# Opbeat
+# ------------------------------------------------
+opbeat==3.5.3

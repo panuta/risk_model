@@ -1,0 +1,92 @@
+database.db
+
+# OSX
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea
+
+# Basics
+*.py[cod]
+__pycache__
+
+# Local Settings
+production_local.py
+develop_local.py
+
+# Logs
+logs
+*.log
+pip-log.txt
+npm-debug.log*
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+htmlcov
+
+# Translations
+*.pot
+
+# Vim
+*~
+*.swp
+*.swo
+
+# npm
+node_modules/
+
+# Webpack
+/assets/bundles/*
+/webpack-stats.json
+/jquery-webpack-stats.json
+
+# Sass
+.sass-cache
+*.map
+
+# Compass
+.sass-cache
+
+# virtual environments
+.env
+
+# Static & Media
+media
+sitestatic/
+staticfiles
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+*.rdb
+
+# Generated files
+_build
+*.egg-info/
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# sftp configuration file
+sftp-config.json
