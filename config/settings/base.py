@@ -12,13 +12,6 @@ if READ_DOT_ENV_FILE:
     env_file = str(ROOT_DIR.path('.env'))
     env.read_env(env_file)
 
-# WEBSITE
-# ------------------------------------------------------------------------------
-
-WEBSITE_NAME = 'Risk Model'
-WEBSITE_DOMAIN = 'example.com'  # Not include subdomain
-WEBSITE_URL = 'http://www.' + WEBSITE_DOMAIN
-
 
 # APP CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -35,9 +28,7 @@ THIRD_PARTY_APPS = (
 
 )
 
-# Apps specific for this project go here.
 LOCAL_APPS = (
-    # 'app.data',
     'app.risk',
 
 )
@@ -56,13 +47,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-
-# MIGRATIONS CONFIGURATION
-# ------------------------------------------------------------------------------
-MIGRATION_MODULES = {
-    'sites': 'app.contrib.sites.migrations'
-}
 
 
 # DEBUG
@@ -95,28 +79,17 @@ MANAGERS = ADMINS
 
 # DATABASE
 # ------------------------------------------------------------------------------
-# DATABASES = {
-#     'default': env.db('DATABASE_URL', default='sqlite:///database.db'),
-# }
-# DATABASES['default']['ATOMIC_REQUESTS'] = True
-
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'zappa_django_utils.db.backends.s3sqlite',
-        'NAME': 'database.db',
-        'BUCKET': 'riskmodel-sqlite'
-    }
+    'default': env.db('DATABASE_URL', default='sqlite:///database.db'),
 }
+DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
 # GENERAL CONFIGURATION
 # ------------------------------------------------------------------------------
 
 TIME_ZONE = 'UTC'
-
 LANGUAGE_CODE = 'en-us'
-
 USE_TZ = True
 
 
@@ -184,12 +157,6 @@ ADMIN_URL = 'admin/'
 # Django Sequences
 # ----------------------------------------------------------------------------
 INSTALLED_APPS += ('sequences.apps.SequencesConfig', )
-
-
-# Django Sass Processor
-# ----------------------------------------------------------------------------
-INSTALLED_APPS += ('sass_processor', )
-STATICFILES_FINDERS += ('sass_processor.finders.CssFinder', )
 
 
 # Zappa

@@ -1,66 +1,72 @@
 from .base import *
 
 
-# STATIC_URL = '/staticfiles/'
-
 # SECRET CONFIGURATION
 # ------------------------------------------------------------------------------
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
-# OPBEAT
-# ------------------------------------------------------------------------------
 
-INSTALLED_APPS += ('opbeat.contrib.django', )
-OPBEAT = {
-    'ORGANIZATION_ID': env('DJANGO_OPBEAT_ORGANIZATION_ID'),
-    'APP_ID': env('DJANGO_OPBEAT_APP_ID'),
-    'SECRET_TOKEN': env('DJANGO_OPBEAT_SECRET_TOKEN')
-}
-MIDDLEWARE = ['opbeat.contrib.django.middleware.OpbeatAPMMiddleware', ] + MIDDLEWARE
-
-
-# SECURITY CONFIGURATION
-# ------------------------------------------------------------------------------
-# SECURE_HSTS_SECONDS = 60
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
-#     'DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
-# SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
-#     'DJANGO_SECURE_CONTENT_TYPE_NOSNIFF', default=True)
-# SECURE_BROWSER_XSS_FILTER = True
-# SESSION_COOKIE_SECURE = True
-# SESSION_COOKIE_HTTPONLY = True
-# SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
-# CSRF_COOKIE_SECURE = True
-# CSRF_COOKIE_HTTPONLY = True
-# X_FRAME_OPTIONS = 'DENY'
-
-
-# Site
+# SITE CONFIGURATION
 # ------------------------------------------------------------------------------
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['example.com', ])
 
-INSTALLED_APPS += ('gunicorn', )
 
-
-# Email
+# STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------
 
-# DEFAULT_FROM_EMAIL = env('DJANGO_DEFAULT_FROM_EMAIL',
-#                          default='Startup <noreply@example.com>')
-# EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX', default='[Startup]')
-# SERVER_EMAIL = env('DJANGO_SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
-#
-# INSTALLED_APPS += ('anymail', )
-# ANYMAIL = {
-#     'MAILGUN_API_KEY': env('DJANGO_MAILGUN_API_KEY'),
-#     'MAILGUN_SENDER_DOMAIN': env('MAILGUN_SENDER_DOMAIN')
-# }
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+INSTALLED_APPS += ('storages', )
+
+AWS_ACCESS_KEY_ID = env('DJANGO_AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = env('DJANGO_AWS_STORAGE_BUCKET_NAME')
+AWS_AUTO_CREATE_BUCKET = True
+AWS_QUERYSTRING_AUTH = False
+
+# AWS cache settings, don't change unless you know what you're doing:
+AWS_EXPIRY = 60 * 60 * 24 * 7
+
+# TODO See: https://github.com/jschneier/django-storages/issues/47
+# Revert the following and use str after the above-mentioned bug is fixed in
+# either django-storage-redux or boto
+control = 'max-age=%d, s-maxage=%d, must-revalidate' % (AWS_EXPIRY, AWS_EXPIRY)
+AWS_HEADERS = {
+    'Cache-Control': bytes(control, encoding='latin-1')
+}
+
+# URL that handles the media served from MEDIA_ROOT, used for managing
+# stored files.
+
+#  See:http://stackoverflow.com/questions/10390244/
+from storages.backends.s3boto3 import S3Boto3Storage
+StaticRootS3BotoStorage = lambda: S3Boto3Storage(location='static')  # noqa
+MediaRootS3BotoStorage = lambda: S3Boto3Storage(location='media', file_overwrite=False)  # noqa
+DEFAULT_FILE_STORAGE = 'config.settings.production.MediaRootS3BotoStorage'
+
+MEDIA_URL = 'https://s3.amazonaws.com/%s/media/' % AWS_STORAGE_BUCKET_NAME
+
+# Static Assets
+# ------------------------
+
+STATIC_URL = 'https://s3.amazonaws.com/%s/static/' % AWS_STORAGE_BUCKET_NAME
+STATICFILES_STORAGE = 'config.settings.production.StaticRootS3BotoStorage'
+
+# See: https://github.com/antonagestam/collectfast
+# For Django 1.7+, 'collectfast' should come before
+# 'django.contrib.staticfiles'
+AWS_PRELOAD_METADATA = True
+INSTALLED_APPS = ('collectfast', ) + INSTALLED_APPS
 
 
-# Template
+# COMPRESSOR
+# ------------------------------------------------------------------------------
+COMPRESS_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+COMPRESS_URL = STATIC_URL
+COMPRESS_ENABLED = env.bool('COMPRESS_ENABLED', default=True)
+
+
+# TEMPLATE
 # ------------------------------------------------------------------------------
 
 TEMPLATES[0]['OPTIONS']['loaders'] = [
@@ -68,44 +74,18 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
         'django.template.loaders.filesystem.Loader', 'django.template.loaders.app_directories.Loader', ]),
 ]
 
-# Database
+
+# DATABASE
 # ------------------------------------------------------------------------------
-
-DATABASES['default'] = env.db('DATABASE_URL')
-
-
-# Caching
-# ------------------------------------------------------------------------------
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379/1",
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#             "IGNORE_EXCEPTIONS": True,  # mimics memcache behavior.
-#                                         # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
-#         }
-#     }
-# }
-
-
-# AUTHENTICATION CONFIGURATION
-# ------------------------------------------------------------------------------
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    # },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+DATABASES = {
+    'default': {
+        'ENGINE': 'zappa_django_utils.db.backends.s3sqlite',
+        'NAME': 'database.db',
+        'BUCKET': 'riskmodel-sqlite',
+        'ATOMIC_REQUESTS': True,
+        'CONN_MAX_AGE': env.int('CONN_MAX_AGE', default=60)
+    }
+}
 
 
 # LOGGING CONFIGURATION
@@ -157,17 +137,9 @@ LOGGING = {
 }
 
 
-# DJANGO COMPRESSOR
-# ------------------------------------------------------------------------------
-
-COMPRESS_ENABLED = env.bool('COMPRESS_ENABLED', default=True)
-COMPRESS_OFFLINE = True
-
-
 # CUSTOM CONFIGURATION
 # ------------------------------------------------------------------------------
 
-AWS_STORAGE_BUCKET_NAME = ''  # FIX SASS PROCESSSOR
 
 # ------------------------------------------------------------------------------
 

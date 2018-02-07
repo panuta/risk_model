@@ -3,16 +3,10 @@ from .base import *
 
 # DEBUG
 # ------------------------------------------------------------------------------
-# DEBUG = env.bool('DJANGO_DEBUG', default=True)
-DEBUG = True
+DEBUG = env.bool('DJANGO_DEBUG', default=True)
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 ALLOWED_HOSTS = ['*']
-
-
-# WEBSITE
-# ------------------------------------------------------------------------------
-WEBSITE_DOMAIN = 'localhost:8000'
 
 
 # SECRET CONFIGURATION
@@ -20,7 +14,7 @@ WEBSITE_DOMAIN = 'localhost:8000'
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='THIS_IS_DUMMY_SECRET_KEY')
 
 
-# Mail settings
+# EMAIL CONFIGURATION
 # ------------------------------------------------------------------------------
 EMAIL_HOST = 'localhost'
 EMAIL_PORT = 1025
@@ -28,7 +22,7 @@ EMAIL_BACKEND = env('DJANGO_EMAIL_BACKEND',
                     default='django.core.mail.backends.console.EmailBackend')
 
 
-# Caching
+# CACHING
 # ------------------------------------------------------------------------------
 CACHES = {
     'default': {
@@ -36,6 +30,11 @@ CACHES = {
         'LOCATION': ''
     }
 }
+
+
+# TESTING
+# ------------------------------------------------------------------------------
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 
 # Django Debug Toolbar
@@ -46,13 +45,6 @@ INSTALLED_APPS += ('debug_toolbar', )
 
 INTERNAL_IPS = ['127.0.0.1', ]
 
-import socket
-import os
-# tricks to have debug toolbar when developing with docker
-if os.environ.get('USE_DOCKER') == 'yes':
-    ip = socket.gethostbyname(socket.gethostname())
-    INTERNAL_IPS += [ip[:-1] + '1']
-
 DEBUG_TOOLBAR_CONFIG = {
     'DISABLE_PANELS': [
         'debug_toolbar.panels.redirects.RedirectsPanel',
@@ -62,9 +54,10 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 
-# Testing
-# ------------------------------------------------------------------------------
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+# Django Sass Processor
+# ----------------------------------------------------------------------------
+INSTALLED_APPS += ('sass_processor', )
+STATICFILES_FINDERS += ('sass_processor.finders.CssFinder', )
 
 
 # CUSTOM CONFIGURATION

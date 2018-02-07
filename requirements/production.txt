@@ -1,15 +1,11 @@
 # Production dependencies
 -r _base.txt
 
-# WSGI Handler
-# ------------------------------------------------
-gevent==1.2.2
-gunicorn==19.7.1
+zappa==0.45.1
+zappa-django-utils==0.3.1
 
-# Email backends
+# Static and Media Storage
 # ------------------------------------------------
-django-anymail==1.2
-
-# Opbeat
-# ------------------------------------------------
-opbeat==3.5.3
+boto3==1.5.24
+django-storages==1.6.5
+Collectfast==0.6.0
