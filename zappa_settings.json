@@ -1,0 +1,10 @@
+{
+    "dev": {
+        "aws_region": "us-east-1",
+        "django_settings": "config.settings.develop",
+        "profile_name": "default",
+        "project_name": "risk-model",
+        "runtime": "python3.6",
+        "s3_bucket": "zappa-8b9o15ohw"
+    }
+}

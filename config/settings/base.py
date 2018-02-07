@@ -95,10 +95,19 @@ MANAGERS = ADMINS
 
 # DATABASE
 # ------------------------------------------------------------------------------
+# DATABASES = {
+#     'default': env.db('DATABASE_URL', default='sqlite:///database.db'),
+# }
+# DATABASES['default']['ATOMIC_REQUESTS'] = True
+
+
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='sqlite:///database.db'),
+    'default': {
+        'ENGINE': 'zappa_django_utils.db.backends.s3sqlite',
+        'NAME': 'database.db',
+        'BUCKET': 'riskmodel-sqlite'
+    }
 }
-DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
 # GENERAL CONFIGURATION
@@ -181,3 +190,8 @@ INSTALLED_APPS += ('sequences.apps.SequencesConfig', )
 # ----------------------------------------------------------------------------
 INSTALLED_APPS += ('sass_processor', )
 STATICFILES_FINDERS += ('sass_processor.finders.CssFinder', )
+
+
+# Zappa
+# ----------------------------------------------------------------------------
+INSTALLED_APPS += ('zappa_django_utils',)
