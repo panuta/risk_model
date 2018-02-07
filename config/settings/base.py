@@ -175,3 +175,9 @@ ADMIN_URL = 'admin/'
 # Django Sequences
 # ----------------------------------------------------------------------------
 INSTALLED_APPS += ('sequences.apps.SequencesConfig', )
+
+
+# Django Sass Processor
+# ----------------------------------------------------------------------------
+INSTALLED_APPS += ('sass_processor', )
+STATICFILES_FINDERS += ('sass_processor.finders.CssFinder', )

@@ -1,0 +1,48 @@
+html, body {
+  background-color: #fff;
+}
+
+@import "form";
+
+.navbar {
+  background-color: #219da6;
+  height: 46px;
+
+  .navbar-brand {
+    font-size: 1.1rem;
+  }
+}
+
+.sidebar {
+  background-color: #f2f7f8;
+  height: calc(100vh - 46px);
+  padding-top: 1.2rem;
+
+  h3 {
+    color: #555;
+    font-size: .85rem;
+  }
+
+  .nav-link {
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: .95rem;
+    margin-bottom: .2rem;
+    padding: .4rem .8rem;
+
+    &:hover {
+      background-color: #ccd5d5;
+    }
+
+    &.active {
+      background-color: #617474;
+      color: #fff !important;
+    }
+  }
+}
+
+main {
+  h1 {
+    font-size: 1.6rem;
+  }
+}
