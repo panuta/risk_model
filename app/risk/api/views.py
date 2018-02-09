@@ -1,7 +1,7 @@
 from django.http import Http404
 
 from app.api.views import JsonListView, JsonDetailView
-from app.risk.models import RiskModel, RiskModelField, RiskModelObject, RiskModelObjectValue
+from app.risk.models import RiskModel, RiskModelField, RiskModelObject, RiskModelObjectValue, FieldType
 
 
 class RiskModelListView(JsonListView):
@@ -40,7 +40,9 @@ class RiskModelListView(JsonListView):
                         has_error = True
                         field_errors['type'] = 'Type must not be empty'
 
-                    if field.get('type') not in ('text', 'number', 'datetime'):  # TODO : keep this list somewhere else
+                    # print(FieldType.__members__)
+
+                    if field.get('type') not in FieldType:
                         has_error = True
                         field_errors['type'] = 'Type is invalid'
 

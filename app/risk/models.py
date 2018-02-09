@@ -1,4 +1,5 @@
 import uuid
+from enum import Enum
 
 from django.db import models
 from django_extensions.db.fields import AutoSlugField
@@ -33,12 +34,41 @@ class RiskModel(SerializableMixin, models.Model):
         }
 
 
+class FieldTypeMeta(type):
+    def __contains__(cls, item):
+        print('CONTAIN: {}'.format(item))
+        return True
+
+
+class FieldType(Enum, metaclass=FieldTypeMeta):
+    TEXT = 'text'
+    NUMBER = 'number'
+    DATE = 'date'
+    ENUM = 'enum'
+
+    @classmethod
+    def to_choices(cls):
+        return ((str(value), name) for name, value in FieldType.__members__.items())
+
+    @classmethod
+    def to_value(cls, field_type, naive_value):
+        if field_type == 'text':
+            return str(naive_value)
+        elif field_type == 'number':
+            return int(naive_value)
+        elif field_type == 'date':
+            return parse(naive_value)
+        elif field_type == 'enum':
+            return int(naive_value)
+        return None
+
+
 class RiskModelField(SerializableMixin, models.Model):
     risk_model = models.ForeignKey(RiskModel, related_name='fields', on_delete=models.CASCADE)
     field_id = models.PositiveIntegerField()
     slug = AutoSlugField(populate_from=['name'], editable=True, db_index=True)
     name = models.CharField(max_length=128)
-    type = models.CharField(max_length=64)
+    type = models.CharField(max_length=64, choices=FieldType.to_choices())
     is_required = models.BooleanField(default=False)
 
     class Meta:
@@ -60,6 +90,17 @@ class RiskModelField(SerializableMixin, models.Model):
         if not self.field_id:
             self.field_id = get_next_value('risk_model_{}'.format(self.risk_model.id))
         super().save(**kwargs)
+
+
+class RiskModelEnumField(models.Model):
+    field = models.ForeignKey(RiskModelField, on_delete=models.CASCADE)
+    value = models.CharField(max_length=128)
+
+    class Meta:
+        unique_together = ('field', 'value')
+
+    def __str__(self):
+        return self.value
 
 
 class RiskModelObject(SerializableMixin, models.Model):
@@ -91,22 +132,24 @@ class RiskModelObjectValue(models.Model):
 
     # Only one of these will be set as object value
     value_text = models.TextField(null=True, blank=True)
-    value_number = models.IntegerField(null=True, blank=True)
-    value_datetime = models.DateTimeField(null=True, blank=True)
+    value_number = models.DecimalField(decimal_places=2, max_digits=30, null=True, blank=True)
+    value_date = models.DateField(null=True, blank=True)
+    value_enum = models.PositiveIntegerField(null=True, blank=True)  # Id to RiskModelEnumField object
 
     def __str__(self):
         return '{value} ({field})'.format(value=self.get_value(), field=self.field)
 
     def get_value(self):
-        if self.field_type == 'text':
-            return self.value_text
-
-        # TODO : add more type, convert to native data type
-
-        return None
+        try:
+            return getattr(self, 'value_{}'.format(self.field_type))
+        except AttributeError:
+            return None
 
     @classmethod
     def to_value(cls, field_type, naive_value):
+
+
+
         if field_type == 'text':
             return str(naive_value)
         elif field_type == 'number':
@@ -116,9 +159,7 @@ class RiskModelObjectValue(models.Model):
         return None
 
     def set_value(self, value):
-        if self.field_type == 'text':
-            self.value_text = value
-
-        # TODO : add more type
-
-        return None
+        try:
+            setattr(self, 'value_{}'.format(self.field_type), value)
+        except AttributeError:
+            pass
