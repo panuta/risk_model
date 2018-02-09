@@ -77,6 +77,9 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 
 # DATABASE
 # ------------------------------------------------------------------------------
+
+INSTALLED_APPS += ('zappa_django_utils',)
+
 DATABASES = {
     'default': {
         'ENGINE': 'zappa_django_utils.db.backends.s3sqlite',

@@ -158,7 +158,3 @@ ADMIN_URL = 'admin/'
 # ----------------------------------------------------------------------------
 INSTALLED_APPS += ('sequences.apps.SequencesConfig', )
 
-
-# Zappa
-# ----------------------------------------------------------------------------
-INSTALLED_APPS += ('zappa_django_utils',)
