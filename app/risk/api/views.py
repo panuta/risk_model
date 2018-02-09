@@ -1,7 +1,9 @@
 from django.http import Http404
 
+from app.anyvalue.enum import ValueType
 from app.api.views import JsonListView, JsonDetailView
-from app.risk.models import RiskModel, RiskModelField, RiskModelObject, RiskModelObjectValue, FieldType
+from app.anyvalue.fields import AnyValue
+from app.risk.models import RiskModel, RiskModelField, RiskModelObject, RiskModelObjectValue
 
 
 class RiskModelListView(JsonListView):
@@ -12,6 +14,13 @@ class RiskModelListView(JsonListView):
         risk_model = RiskModel.objects.create(name=validated_data['name'])
 
         for field in validated_data['fields']:
+            if field.get('type') == ValueType.ENUM:
+                enum_choices = field.pop('choices')
+
+
+
+                pass
+
             RiskModelField.objects.create(risk_model=risk_model, **field)
 
         return risk_model
@@ -40,11 +49,13 @@ class RiskModelListView(JsonListView):
                         has_error = True
                         field_errors['type'] = 'Type must not be empty'
 
-                    # print(FieldType.__members__)
-
-                    if field.get('type') not in FieldType:
+                    if field.get('type') not in [value.value for _, value in ValueType.__members__.items()]:
                         has_error = True
                         field_errors['type'] = 'Type is invalid'
+
+                    if field.get('type') == ValueType.ENUM and not field.get('choices', None):
+                        has_error = True
+                        field_errors['choices'] = 'Missing choices data for enum type'
 
                     fields_errors.append(field_errors)
 
@@ -73,6 +84,8 @@ class RiskModelDetailView(JsonDetailView):
         # Updating model fields
         existing_fields = set(risk_model.fields.all())
         updated_fields = set()
+
+        # TODO : Check if new field is enum type
 
         for field in validated_data.get('fields'):
             field_id = field.get('field_id', None)
@@ -106,19 +119,38 @@ class RiskModelObjectListView(JsonListView):
         risk_model = RiskModel.objects.get(uuid=model_uuid)
 
         risk_object = RiskModelObject.objects.create(risk_model=risk_model)
+
         for field_slug, field_value in validated_data.items():
             field = RiskModelField.objects.get(slug=field_slug)
-
-            object_attrs = {
-                'risk_object': risk_object,
-                'field': field,
-                'field_type': field.type,
-                'value_{}'.format(field.type): RiskModelObjectValue.to_value(field.type, field_value)
-            }
-
-            RiskModelObjectValue.objects.create(**object_attrs)
+            risk_object_value = RiskModelObjectValue(risk_object=risk_object, field=field)
+            risk_object_value.value = AnyValue(field.type, field_value)
+            risk_object_value.save()
 
         return risk_object
+
+
+
+
+        # risk_object = RiskModelObject.objects.create(risk_model=risk_model)
+        # for field_slug, field_value in validated_data.items():
+        #     field = RiskModelField.objects.get(slug=field_slug)
+        #
+        #     object_attrs = {
+        #         'risk_object': risk_object,
+        #         'field': field,
+        #         'value': field_value,
+        #         # 'rating': 4,
+        #         # 'field_type': field.type,
+        #         # 'value_{}'.format(field.type): RiskModelObjectValue.to_value(field.type, field_value)
+        #     }
+        #
+        #     risk_object_value = RiskModelObjectValue(**object_attrs)
+        #     # risk_object_value.value.set(field_value)
+        #     risk_object_value.value = field_value
+        #
+        #     RiskModelObjectValue.objects.create(**object_attrs)
+        #
+        # return risk_object
 
 
 class RiskModelObjectDetailView(JsonDetailView):

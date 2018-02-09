@@ -1,13 +1,19 @@
 import uuid
 from enum import Enum
 
+from decimal import Decimal
+
 from django.db import models
+from django.db.models import Q
 from django_extensions.db.fields import AutoSlugField
 
 from dateutil.parser import parse
+from functools import reduce
 from sequences import get_next_value
 
+from app.anyvalue.models import AnyValueFieldManager
 from app.api.models import SerializableMixin
+from app.anyvalue.fields import AnyValueField, AnyValueTypeField
 
 
 # Risk models
@@ -34,33 +40,33 @@ class RiskModel(SerializableMixin, models.Model):
         }
 
 
-class FieldTypeMeta(type):
-    def __contains__(cls, item):
-        print('CONTAIN: {}'.format(item))
-        return True
+# class FieldTypeMeta(type):
+#     def __contains__(cls, item):
+#         print('CONTAIN: {}'.format(item))
+#         return True
 
 
-class FieldType(Enum, metaclass=FieldTypeMeta):
-    TEXT = 'text'
-    NUMBER = 'number'
-    DATE = 'date'
-    ENUM = 'enum'
-
-    @classmethod
-    def to_choices(cls):
-        return ((str(value), name) for name, value in FieldType.__members__.items())
-
-    @classmethod
-    def to_value(cls, field_type, naive_value):
-        if field_type == 'text':
-            return str(naive_value)
-        elif field_type == 'number':
-            return int(naive_value)
-        elif field_type == 'date':
-            return parse(naive_value)
-        elif field_type == 'enum':
-            return int(naive_value)
-        return None
+# class FieldType(Enum):
+#     TEXT = 'text'
+#     NUMBER = 'number'
+#     DATE = 'date'
+#     ENUM = 'enum'
+#
+#     @classmethod
+#     def to_choices(cls):
+#         return ((str(value), name) for name, value in FieldType.__members__.items())
+#
+#     @classmethod
+#     def to_value(cls, field_type, naive_value):
+#         if field_type == 'text':
+#             return str(naive_value)
+#         elif field_type == 'number':
+#             return int(naive_value)
+#         elif field_type == 'date':
+#             return parse(naive_value)
+#         elif field_type == 'enum':
+#             return int(naive_value)
+#         return None
 
 
 class RiskModelField(SerializableMixin, models.Model):
@@ -68,7 +74,8 @@ class RiskModelField(SerializableMixin, models.Model):
     field_id = models.PositiveIntegerField()
     slug = AutoSlugField(populate_from=['name'], editable=True, db_index=True)
     name = models.CharField(max_length=128)
-    type = models.CharField(max_length=64, choices=FieldType.to_choices())
+    # type = models.CharField(max_length=64, choices=FieldType.to_choices())
+    type = AnyValueTypeField()
     is_required = models.BooleanField(default=False)
 
     class Meta:
@@ -92,15 +99,15 @@ class RiskModelField(SerializableMixin, models.Model):
         super().save(**kwargs)
 
 
-class RiskModelEnumField(models.Model):
-    field = models.ForeignKey(RiskModelField, on_delete=models.CASCADE)
-    value = models.CharField(max_length=128)
-
-    class Meta:
-        unique_together = ('field', 'value')
-
-    def __str__(self):
-        return self.value
+# class RiskModelEnumField(models.Model):
+#     field = models.ForeignKey(RiskModelField, on_delete=models.CASCADE)
+#     value = models.CharField(max_length=128)
+#
+#     class Meta:
+#         unique_together = ('field', 'value')
+#
+#     def __str__(self):
+#         return self.value
 
 
 class RiskModelObject(SerializableMixin, models.Model):
@@ -120,30 +127,65 @@ class RiskModelObject(SerializableMixin, models.Model):
             'created': self.created,
         }
         for object_value in self.risk_values.all().select_related('field'):
-            dict[object_value.field.slug] = object_value.get_value()
+            dict[object_value.field.slug] = object_value.value.get_value()
 
         return dict
+#
+#
+# class RiskModelObjectValueManager(models.Manager):
+#     def filter(self, *args, **kwargs):
+#
+#         value = kwargs.pop('value', None)
+#         if value:
+#             try:
+#                 decimal_value = Decimal(value)
+#             except:
+#                 decimal_value = None
+#
+#             try:
+#                 date_value = parse(value)
+#             except:
+#                 date_value = None
+#
+#             q_list = [
+#                 {'value_text': value},
+#                 {'value_text': decimal_value},
+#                 {'value_date': date_value},
+#             ]
+#
+#             q = reduce(lambda x, y: x | y, [Q(**k) for k in q_list])
+#
+#             new_args = list(args)
+#             new_args.append(q)
+#
+#             args = new_args
+#
+#         return super().get(*args, **kwargs)
 
 
 class RiskModelObjectValue(models.Model):
     risk_object = models.ForeignKey(RiskModelObject, related_name='risk_values', on_delete=models.CASCADE)
     field = models.ForeignKey(RiskModelField, on_delete=models.CASCADE)
-    field_type = models.CharField(max_length=64, editable=False)  # Same as `type` in `field.type`
+    value = AnyValueField()
 
-    # Only one of these will be set as object value
-    value_text = models.TextField(null=True, blank=True)
-    value_number = models.DecimalField(decimal_places=2, max_digits=30, null=True, blank=True)
-    value_date = models.DateField(null=True, blank=True)
-    value_enum = models.PositiveIntegerField(null=True, blank=True)  # Id to RiskModelEnumField object
+    objects = AnyValueFieldManager()
+
+    # field_type = models.CharField(max_length=64, editable=False)  # Same as `type` in `field.type`
+    #
+    # # Only one of these will be set as object value
+    # value_text = models.TextField(null=True, blank=True)
+    # value_number = models.DecimalField(decimal_places=2, max_digits=30, null=True, blank=True)
+    # value_date = models.DateField(null=True, blank=True)
+    # value_enum = models.PositiveIntegerField(null=True, blank=True)  # Id to RiskModelEnumField object
 
     def __str__(self):
-        return '{value} ({field})'.format(value=self.get_value(), field=self.field)
-
-    def get_value(self):
-        try:
-            return getattr(self, 'value_{}'.format(self.field_type))
-        except AttributeError:
-            return None
+        return '{value} ({field})'.format(value=self.value.get_value(), field=self.field)
+    #
+    # def get_value(self):
+    #     try:
+    #         return getattr(self, 'value_{}'.format(self.field_type))
+    #     except AttributeError:
+    #         return None
 
     @classmethod
     def to_value(cls, field_type, naive_value):

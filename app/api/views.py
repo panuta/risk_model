@@ -88,6 +88,11 @@ class JsonListView(JsonResponseMixin, BaseListView):
         try:
             obj = self.perform_create(request, data, *args, **kwargs)
         except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+
+
+
             return self.render_to_response({'error': str(e)}, status=500)
 
         if obj:
