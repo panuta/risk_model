@@ -81,18 +81,13 @@ class JsonListView(JsonResponseMixin, BaseListView):
         except JSONDecodeError as e:
             return self.render_to_response({'error': 'JSON decode error: {}'.format(str(e))}, status=500)
 
-        validated_data, errors = self.validate_on_create(self.request, data, {})
+        validated_data, errors = self.validate_on_create(self.request, data, *args, **kwargs)
         if errors:
             return self.render_to_response(errors, status=400)
 
         try:
-            obj = self.perform_create(request, data, *args, **kwargs)
+            obj = self.perform_create(request, validated_data, *args, **kwargs)
         except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-
-
-
             return self.render_to_response({'error': str(e)}, status=500)
 
         if obj:
@@ -105,8 +100,8 @@ class JsonListView(JsonResponseMixin, BaseListView):
 
         return self.render_to_response(return_data, status=201)
 
-    def validate_on_create(self, request, data, errors):
-        return data, errors
+    def validate_on_create(self, request, data, *args, **kwargs):
+        return data, {}
 
     def perform_create(self, request, validated_data, *args, **kwargs):
         raise NotImplementedError
@@ -164,12 +159,12 @@ class JsonDetailView(JsonResponseMixin, BaseDetailView):
         except JSONDecodeError as e:
             return self.render_to_response({'error': 'JSON decode error: {}'.format(str(e))}, status=500)
 
-        validated_data, errors = self.validate_on_update(self.request, data, {})
+        validated_data, errors = self.validate_on_update(self.request, data, *args, **kwargs)
         if errors:
             return self.render_to_response(errors, status=400)
 
         try:
-            obj = self.perform_update(request, data, *args, **kwargs)
+            obj = self.perform_update(request, validated_data, *args, **kwargs)
         except Exception as e:
             return self.render_to_response({'error': str(e)}, status=500)
 
@@ -183,8 +178,8 @@ class JsonDetailView(JsonResponseMixin, BaseDetailView):
 
         return self.render_to_response(return_data)
 
-    def validate_on_update(self, request, data, errors):
-        return data, errors
+    def validate_on_update(self, request, data, *args, **kwargs):
+        return data, {}
 
     def perform_update(self, request, validated_data, *args, **kwargs):
         raise NotImplementedError
@@ -192,19 +187,19 @@ class JsonDetailView(JsonResponseMixin, BaseDetailView):
     def delete(self, request, *args, **kwargs):
         data = None
 
-        validated_data, errors = self.validate_on_delete(self.request, data, {})
+        validated_data, errors = self.validate_on_delete(self.request, data, *args, **kwargs)
         if errors:
             return self.render_to_response(errors, status=400)
 
         try:
-            self.perform_delete(request, data, *args, **kwargs)
+            self.perform_delete(request, validated_data, *args, **kwargs)
         except Exception as e:
             return self.render_to_response({'error': str(e)}, status=500)
 
         return self.render_to_response('', status=204)
 
-    def validate_on_delete(self, request, data, errors):
-        return data, errors
+    def validate_on_delete(self, request, data, *args, **kwargs):
+        return data, {}
 
     def perform_delete(self, request, validated_data, *args, **kwargs):
         raise NotImplementedError
