@@ -118,7 +118,7 @@ class RiskModelDetailView(JsonDetailView):
     pk_url_kwarg = 'model_uuid'
     pk_field = 'uuid'
 
-    def validate_on_update(self, request, data, *args, **kwargs):
+    def validate_on_update(self, request, model_object, data, *args, **kwargs):
         validated_data = {}
         errors = {}
 
@@ -133,9 +133,8 @@ class RiskModelDetailView(JsonDetailView):
 
         return validated_data, errors
 
-    def perform_update(self, request, validated_data, *args, **kwargs):
-        model_uuid = kwargs.get(self.pk_url_kwarg)
-        risk_model = RiskModel.objects.get(uuid=model_uuid)
+    def perform_update(self, request, model_object, validated_data, *args, **kwargs):
+        risk_model = model_object
 
         risk_model.name = validated_data.get('name')
         risk_model.save()
@@ -157,9 +156,8 @@ class RiskModelDetailView(JsonDetailView):
 
         return risk_model
 
-    def perform_delete(self, request, validated_data, *args, **kwargs):
-        model_uuid = kwargs.get(self.pk_url_kwarg)
-        risk_model = RiskModel.objects.get(uuid=model_uuid)
+    def perform_delete(self, request, model_object, validated_data, *args, **kwargs):
+        risk_model = model_object
         risk_model.delete()
 
 
@@ -183,7 +181,7 @@ class RiskModelObjectListView(JsonListView):
         return self._risk_model_fields
 
     def validate_on_create(self, request, data, *args, **kwargs):
-        risk_model = self._get_risk_object(uuid=kwargs.get('model_uuid'))
+        risk_model = self._get_risk_model(uuid=kwargs.get('model_uuid'))
         risk_model_fields = self._get_risk_model_fields(risk_model=risk_model)
 
         validated_data = {}
@@ -207,7 +205,7 @@ class RiskModelObjectListView(JsonListView):
         return validated_data, errors
 
     def perform_create(self, request, validated_data, *args, **kwargs):
-        risk_model = self._get_risk_object(uuid=kwargs.get('model_uuid'))
+        risk_model = self._get_risk_model(uuid=kwargs.get('model_uuid'))
         risk_model_fields = self._get_risk_model_fields(risk_model=risk_model)
 
         risk_object = RiskModelObject.objects.create(risk_model=risk_model)
@@ -229,14 +227,7 @@ class RiskModelObjectDetailView(JsonDetailView):
     pk_url_kwarg = 'object_uuid'
     pk_field = 'uuid'
 
-    _risk_object = None
     _risk_model_fields = None
-
-    # Cached values
-    def _get_risk_object(self, uuid):
-        if not self._risk_object:
-            self._risk_object = RiskModelObject.objects.get(uuid=uuid)
-        return self._risk_object
 
     # Cached values
     def _get_risk_model_fields(self, risk_model):
@@ -244,11 +235,11 @@ class RiskModelObjectDetailView(JsonDetailView):
             self._risk_model_fields = RiskModelField.objects.filter(risk_model=risk_model)
         return self._risk_model_fields
 
-    def validate_on_update(self, request, data, *args, **kwargs):
+    def validate_on_update(self, request, model_object, data, *args, **kwargs):
         validated_data = {}
         errors = {}
 
-        risk_object = self._get_risk_object(uuid=kwargs.get(self.pk_url_kwarg))
+        risk_object = model_object
         risk_model_fields = self._get_risk_model_fields(risk_model=risk_object.risk_model)
 
         for field in risk_model_fields:
@@ -266,8 +257,8 @@ class RiskModelObjectDetailView(JsonDetailView):
 
         return validated_data, errors
 
-    def perform_update(self, request, validated_data, *args, **kwargs):
-        risk_object = self._get_risk_object(uuid=kwargs.get(self.pk_url_kwarg))
+    def perform_update(self, request, model_object, validated_data, *args, **kwargs):
+        risk_object = model_object
         risk_model_fields = self._get_risk_model_fields(risk_model=risk_object.risk_model)
 
         for field in risk_model_fields:
@@ -286,7 +277,6 @@ class RiskModelObjectDetailView(JsonDetailView):
 
         return risk_object
 
-    def perform_delete(self, request, validated_data, *args, **kwargs):
-        object_uuid = kwargs.get(self.pk_url_kwarg)
-        risk_object = RiskModelObject.objects.get(uuid=object_uuid)
+    def perform_delete(self, request, model_object, validated_data, *args, **kwargs):
+        risk_object = model_object
         risk_object.delete()

@@ -159,12 +159,17 @@ class JsonDetailView(JsonResponseMixin, BaseDetailView):
         except JSONDecodeError as e:
             return self.render_to_response({'error': 'JSON decode error: {}'.format(str(e))}, status=500)
 
-        validated_data, errors = self.validate_on_update(self.request, data, *args, **kwargs)
+        try:
+            model_object = self.get_object()
+        except Http404 as e:
+            return self.render_to_response({'error': str(e)}, status=404)
+
+        validated_data, errors = self.validate_on_update(self.request, model_object, data, *args, **kwargs)
         if errors:
             return self.render_to_response(errors, status=400)
 
         try:
-            obj = self.perform_update(request, validated_data, *args, **kwargs)
+            obj = self.perform_update(request, model_object, validated_data, *args, **kwargs)
         except Exception as e:
             return self.render_to_response({'error': str(e)}, status=500)
 
@@ -178,28 +183,33 @@ class JsonDetailView(JsonResponseMixin, BaseDetailView):
 
         return self.render_to_response(return_data)
 
-    def validate_on_update(self, request, data, *args, **kwargs):
+    def validate_on_update(self, request, model_object, data, *args, **kwargs):
         return data, {}
 
-    def perform_update(self, request, validated_data, *args, **kwargs):
+    def perform_update(self, request, model_object, validated_data, *args, **kwargs):
         raise NotImplementedError
 
     def delete(self, request, *args, **kwargs):
+        try:
+            model_object = self.get_object()
+        except Http404 as e:
+            return self.render_to_response({'error': str(e)}, status=404)
+
         data = None
 
-        validated_data, errors = self.validate_on_delete(self.request, data, *args, **kwargs)
+        validated_data, errors = self.validate_on_delete(self.request, model_object, data, *args, **kwargs)
         if errors:
             return self.render_to_response(errors, status=400)
 
         try:
-            self.perform_delete(request, validated_data, *args, **kwargs)
+            self.perform_delete(request, model_object, validated_data, *args, **kwargs)
         except Exception as e:
             return self.render_to_response({'error': str(e)}, status=500)
 
         return self.render_to_response('', status=204)
 
-    def validate_on_delete(self, request, data, *args, **kwargs):
+    def validate_on_delete(self, request, model_object, data, *args, **kwargs):
         return data, {}
 
-    def perform_delete(self, request, validated_data, *args, **kwargs):
+    def perform_delete(self, request, model_object, validated_data, *args, **kwargs):
         raise NotImplementedError
