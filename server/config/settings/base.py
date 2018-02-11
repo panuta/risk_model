@@ -6,12 +6,6 @@ APPS_DIR = ROOT_DIR.path('app')
 
 env = environ.Env()
 
-READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=False)
-
-if READ_DOT_ENV_FILE:
-    env_file = str(ROOT_DIR.path('.env'))
-    env.read_env(env_file)
-
 
 # APP CONFIGURATION
 # ------------------------------------------------------------------------------
