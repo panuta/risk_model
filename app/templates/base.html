@@ -9,9 +9,7 @@
   <meta name="description" content="">
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-{#  <link href="{% sass_src 'scss/styles.scss' %}" rel="stylesheet" type="text/css" />#}
-
-  <link href="{% static 'scss/styles.css' %}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'styles.css' %}" rel="stylesheet" type="text/css" />  <!-- This only works in production -->
 </head>
 
 <body>
@@ -39,7 +37,9 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
-  <script src="{% static 'app/js/app.js' %}"></script>
+  <script src="{% static 'build.js' %}"></script>
+
+{#  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>#}
+{#  <script src="{% static 'app/js/app.js' %}"></script>#}
 </body>
 </html>

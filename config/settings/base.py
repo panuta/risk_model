@@ -1,3 +1,4 @@
+import os
 import environ
 
 
@@ -19,7 +20,7 @@ DJANGO_APPS = (
 )
 
 THIRD_PARTY_APPS = (
-        
+
 )
 
 LOCAL_APPS = (
@@ -152,3 +153,15 @@ ADMIN_URL = 'admin/'
 # ----------------------------------------------------------------------------
 INSTALLED_APPS += ('sequences.apps.SequencesConfig', )
 
+
+# Django Webpack Loader
+# ----------------------------------------------------------------------------
+
+INSTALLED_APPS += ('webpack_loader', )
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'dist/',
+        'STATS_FILE': str(ROOT_DIR.path('client/webpack-stats.json')),
+    },
+}

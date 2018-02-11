@@ -13,6 +13,12 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['example.com', ])
 
 
+# STATIC FILE CONFIGURATION
+# ------------------------------------------------------------------------------
+
+STATICFILES_DIRS = STATICFILES_DIRS + (str(ROOT_DIR.path('client/dist')), )
+
+
 # STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------
 
@@ -57,6 +63,12 @@ STATICFILES_STORAGE = 'config.settings.production.StaticRootS3BotoStorage'
 # 'django.contrib.staticfiles'
 AWS_PRELOAD_METADATA = True
 INSTALLED_APPS = ('collectfast', ) + INSTALLED_APPS
+
+
+# Django Webpack Loader
+# ----------------------------------------------------------------------------
+
+WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = str(ROOT_DIR.path('client/webpack-stats-production.json'))
 
 
 # COMPRESSOR

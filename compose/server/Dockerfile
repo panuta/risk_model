@@ -10,13 +10,13 @@ RUN apk add --no-cache \
         libxslt-dev
 
 # Requirements have to be pulled and installed here, otherwise caching won't work
-COPY ./server/requirements /requirements
+COPY ./requirements /requirements
 RUN pip install -r /requirements/develop.txt
 
 COPY ./compose/server/start.sh /start.sh
 RUN sed -i 's/\r//' /start.sh
 RUN chmod +x /start.sh
 
-WORKDIR /app/server
+WORKDIR /app
 
 ENTRYPOINT ["/start.sh"]

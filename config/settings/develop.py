@@ -14,6 +14,13 @@ ALLOWED_HOSTS = ['*']
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='THIS_IS_DUMMY_SECRET_KEY')
 
 
+# STATIC FILE CONFIGURATION
+# ------------------------------------------------------------------------------
+
+# STATIC_URL = 'http://localhost:8080/dist/'
+STATIC_URL = '/static/'
+
+
 # EMAIL CONFIGURATION
 # ------------------------------------------------------------------------------
 EMAIL_HOST = 'localhost'
@@ -58,6 +65,12 @@ DEBUG_TOOLBAR_CONFIG = {
 # ----------------------------------------------------------------------------
 INSTALLED_APPS += ('sass_processor', )
 STATICFILES_FINDERS += ('sass_processor.finders.CssFinder', )
+
+
+# Django Webpack Loader
+# ----------------------------------------------------------------------------
+
+WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = str(ROOT_DIR.path('client/webpack-stats-development.json'))
 
 
 # CUSTOM CONFIGURATION
