@@ -1,3 +1,4 @@
+# Server database
 database.db
 
 # OSX
@@ -8,9 +9,10 @@ database.db
 # IDE
 .idea
 
-# Basics
+# Python
 *.py[cod]
 __pycache__
+.pytest_cache
 
 # Local Settings
 production_local.py
