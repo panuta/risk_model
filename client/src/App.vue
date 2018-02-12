@@ -1,33 +1,35 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank">Twitter</a></li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li><a href="http://router.vuejs.org/" target="_blank">vue-router</a></li>
-      <li><a href="http://vuex.vuejs.org/" target="_blank">vuex</a></li>
-      <li><a href="http://vue-loader.vuejs.org/" target="_blank">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
-    </ul>
+    <div v-if="loading" class="app-loading">Loading data...</div>
+    <div v-if="!loading">
+      <router-view />
+    </div>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'app',
-  data () {
-    return {
-      msg: 'Welcome to Your Vue.js App'
+  import axios from 'axios';
+  import ModelList from "./components/ModelList";
+
+  export default {
+    name: 'app',
+    components: {ModelList},
+    data () {
+      return {
+        loading: true
+      }
+    },
+    created () {
+      axios.get('/api/models/')
+      .then(response => {
+        this.$store.commit('setRiskModels', response.data.results);
+        this.loading = false;
+      })
+      .catch(e => {
+        this.errors.push(e)
+      })
     }
   }
-}
 </script>
 
 <style lang="scss">
@@ -35,26 +37,15 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #222;
+}
+
+.app-loading {
+  margin: 60px 0;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-h1, h2 {
-  font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
 }
 
 a {
-  color: #42b983;
+  color: #3a6593;
 }
 </style>
