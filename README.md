@@ -1,6 +1,6 @@
 # Risk Model
 
-This web application project was created for [test assignment]()
+This web application project was created for [test assignment](https://github.com/IntuitiveWebSolutions/ProductDevelopmentProject)
 
 ![Screenshot](https://raw.githubusercontent.com/panuta/risk_model/master/docs/images/screenshot.png)
 
