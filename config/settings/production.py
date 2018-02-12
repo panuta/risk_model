@@ -68,7 +68,7 @@ INSTALLED_APPS = ('collectfast', ) + INSTALLED_APPS
 # Django Webpack Loader
 # ----------------------------------------------------------------------------
 
-WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = str(ROOT_DIR.path('client/webpack-stats-production.json'))
+WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = str(ROOT_DIR.path('.webpack/webpack-stats-production.json'))
 
 
 # COMPRESSOR

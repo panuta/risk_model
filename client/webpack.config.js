@@ -9,7 +9,7 @@ module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist/client'),
-    publicPath: 'http://localhost:8080/dist/',
+    publicPath: 'http://0.0.0.0:8080/dist/',
     filename: 'build.js'
   },
   module: {
@@ -86,6 +86,7 @@ module.exports = {
     extensions: ['*', '.js', '.vue', '.json']
   },
   devServer: {
+    host: "0.0.0.0",
     historyApiFallback: true,
     noInfo: true,
     overlay: true
@@ -99,7 +100,7 @@ module.exports = {
 if (process.env.NODE_ENV === 'development') {
   module.exports.plugins = (module.exports.plugins || []).concat([
     new BundleTracker({
-      filename: './webpack-stats-development.json'
+      filename: '../.webpack/webpack-stats-development.json'
     }),
   ]);
 }
@@ -117,7 +118,7 @@ if (process.env.NODE_ENV === 'production') {
   module.exports.plugins = (module.exports.plugins || []).concat([
     new ExtractTextPlugin('styles.css'),
     new BundleTracker({
-      filename: './webpack-stats-production.json'
+      filename: '../.webpack/webpack-stats-production.json'
     }),
     new webpack.DefinePlugin({
       'process.env': {

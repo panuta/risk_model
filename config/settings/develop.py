@@ -70,7 +70,7 @@ STATICFILES_FINDERS += ('sass_processor.finders.CssFinder', )
 # Django Webpack Loader
 # ----------------------------------------------------------------------------
 
-WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = str(ROOT_DIR.path('client/webpack-stats-development.json'))
+WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = str(ROOT_DIR.path('.webpack/webpack-stats-development.json'))
 
 
 # CUSTOM CONFIGURATION

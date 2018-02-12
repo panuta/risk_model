@@ -162,6 +162,5 @@ INSTALLED_APPS += ('webpack_loader', )
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'dist/',
-        'STATS_FILE': str(ROOT_DIR.path('client/webpack-stats.json')),
     },
 }
