@@ -20,7 +20,7 @@
       }
     },
     created () {
-      axios.get('/api/models/')
+      axios.get(window.location.protocol + '//' + window.location.hostname + window.location.pathname + '/api/models/')
       .then(response => {
         this.$store.commit('setRiskModels', response.data.results);
         this.loading = false;
