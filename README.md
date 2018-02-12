@@ -286,17 +286,24 @@ I know that above permissions is too broad (e.g. some that end with FullAccess).
 
 ### 4. Upload production files
 
-4.1 Collect static files and upload it to AWS S3
+4.1 Edit environment file using template from `env.example` file
+
+    `cp env.example .env`
+
+* Generate new DJANGO_SECRET_KEY
+* Enter AWS configurations
+
+4.2 Collect static files and upload it to AWS S3
 
 	python manage.py collectstatic
 	
-4.2 Delete node_modules
+4.4 Delete node_modules
 
 	rm -rf ./client/node_modules
 	
 Note: We should delete node_modules here because later it won't be uploaded by Zappa
 
-4.3 If this is the first time, run
+4.5 If this is the first time, run
 
 	zappa deploy production
 	
