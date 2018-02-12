@@ -47,7 +47,9 @@ class JsonListView(JsonResponseMixin, BaseListView):
         context['count'] = queryset.count()
 
         page_size = self.kwargs.get('limit') or self.request.GET.get('limit') or self.get_paginate_by(queryset)
-        if page_size:
+        page_size = int(page_size)
+
+        if page_size > 0:
             paginator, page, queryset, is_paginated = self.paginate_queryset(queryset, page_size)
             try:
                 context['previous'] = page.previous_page_number()
