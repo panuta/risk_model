@@ -95,7 +95,7 @@ INSTALLED_APPS += ('zappa_django_utils',)
 DATABASES = {
     'default': {
         'ENGINE': 'zappa_django_utils.db.backends.s3sqlite',
-        'NAME': 'database.db',
+        'NAME': 'production.db',
         'BUCKET': 'riskmodel-sqlite',
         'ATOMIC_REQUESTS': True,
         'CONN_MAX_AGE': env.int('CONN_MAX_AGE', default=60)
