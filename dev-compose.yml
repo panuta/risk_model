@@ -1,11 +1,16 @@
 version: '2'
 
+volumes:
+  node_modules:
+
 services:
   webpack:
     build:
       context: .
       dockerfile: ./compose/webpack/Dockerfile
     volumes:
+      - ./client:/app/client
+      - node_modules:/app/client/node_modules
       - .webpack:/app/.webpack
     ports:
       - "8080:8080"

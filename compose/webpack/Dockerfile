@@ -1,15 +1,13 @@
 FROM node:9.4-alpine
 
-COPY client/package.json client/yarn.lock /tmp/
+RUN mkdir -p /app/client/
 
-# Install packages
-RUN cd /tmp && yarn --pure-lockfile --frozen-lockfile
-RUN mkdir -p /app/client/ && cd /app/client && ln -s /tmp/node_modules
-
-# Copy the code
-ADD . /app
+COPY ./client /app/client
+RUN cd /app/client && yarn --pure-lockfile --frozen-lockfile
 
 EXPOSE 8080
+VOLUME /app/client
+VOLUME /app/client/node_modules
 VOLUME /app/.webpack
 
 WORKDIR /app/client
